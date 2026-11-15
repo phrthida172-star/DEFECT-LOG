@@ -1,410 +1,4 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบติดตามปัญหาระหว่างผลิต | KIM PAI PRINTING & PACKAGING</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Montserrat:wght@400;500;600&family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js & DataLabels Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Prompt', 'Sarabun', 'sans-serif'] },
-                    colors: {
-                        roseLuxury: { 50: '#FDF8F9', 100: '#FCE7F3', 200: '#FBCFE8', 300: '#F9A8D4', 400: '#F472B6', 500: '#EC4899', 600: '#DB2777', 700: '#BE185D', 800: '#9D174D', 900: '#831843' },
-                        goldChampagne: { 50: '#FFFBEB', 100: '#FEF3C7', 200: '#FDE68A', 300: '#FCD34D', 400: '#FBBF24', 500: '#F59E0B', 600: '#D97706', 700: '#B45309' }
-                    },
-                    boxShadow: {
-                        'luxury': '0 10px 30px -5px rgba(190, 24, 93, 0.08), 0 4px 12px -2px rgba(217, 119, 6, 0.05)',
-                        'gold-glow': '0 4px 20px -2px rgba(245, 158, 11, 0.25)',
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #FDF8F9;
-            background-image: radial-gradient(circle at 10% 10%, rgba(252, 231, 243, 0.7) 0%, transparent 40%),
-                              radial-gradient(circle at 90% 85%, rgba(254, 243, 199, 0.6) 0%, transparent 40%);
-            color: #331D2C;
-        }
-        .gold-border-gradient {
-            border: 1px solid transparent;
-            background: linear-gradient(#FFFFFF, #FFFFFF) padding-box,
-                        linear-gradient(135deg, #F9A8D4 0%, #F59E0B 50%, #BE185D 100%) border-box;
-        }
-        .header-gradient { background: linear-gradient(135deg, #831843 0%, #BE185D 55%, #B45309 100%); }
-        .btn-gold-rose {
-            background: linear-gradient(135deg, #BE185D 0%, #DB2777 60%, #D97706 100%);
-            transition: all 0.25s ease;
-        }
-        .btn-gold-rose:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -4px rgba(190, 24, 93, 0.35); }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #FDF8F9; }
-        ::-webkit-scrollbar-thumb { background: #F472B6; border-radius: 9999px; }
-        @media print {
-            .no-print { display: none !important; }
-            body { background: #FFFFFF !important; }
-            .shadow-luxury { box-shadow: none !important; border: 1px solid #E5E7EB !important; }
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-roseLuxury-200 selection:text-roseLuxury-900">
-
-    <!-- Toast Notification Container -->
-    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-    <!-- Top Luxury Header -->
-    <header class="header-gradient text-white shadow-lg sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <div class="px-4 py-2 rounded-2xl bg-gradient-to-br from-[#FBF4E4] via-[#F5E4BE] to-[#ECD39E] border border-[#D4AF37]/80 shadow-gold-glow shrink-0 flex items-center justify-center">
-                        <svg width="168" height="44" viewBox="0 0 210 54" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KIM PAI PRINTING & PACKAGING">
-                            <text x="105" y="31" text-anchor="middle" fill="#3B3E2B" style="font-family: 'Cinzel', serif; font-weight: 600; font-size: 32px; letter-spacing: 2.5px;">KIM PAI</text>
-                            <text x="105" y="47" text-anchor="middle" textLength="176" lengthAdjust="spacing" fill="#3B3E2B" style="font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 10.2px; letter-spacing: 1.4px;">PRINTING &amp; PACKAGING</text>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span id="syncModeBadge" class="px-2.5 py-0.5 text-[11px] font-semibold tracking-wider uppercase rounded-full bg-emerald-500/25 text-emerald-200 border border-emerald-400/40">
-                                🟢 โหมด Google Sheets เรียลไทม์
-                            </span>
-                        </div>
-                        <h1 class="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-white mt-0.5">
-                            ระบบติดตามปัญหาระหว่างผลิต (Live Dashboard)
-                        </h1>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2 no-print">
-                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all bg-white text-roseLuxury-800 shadow-md">
-                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-goldChampagne-600"></i>
-                        <span>สรุปข้อมูล</span>
-                    </button>
-                    <button onclick="switchTab('form')" id="tab-form" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all bg-white/15 text-white hover:bg-white/25 border border-white/20">
-                        <i data-lucide="plus-circle" class="w-4 h-4 text-goldChampagne-300"></i>
-                        <span>บันทึกแจ้งปัญหา</span>
-                    </button>
-                    <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all bg-white/15 text-white hover:bg-white/25 border border-white/20">
-                        <i data-lucide="table-2" class="w-4 h-4 text-goldChampagne-300"></i>
-                        <span>ประวัติทั้งหมด (<span id="totalBadgeCount">0</span>)</span>
-                    </button>
-                    <!-- ปุ่มตั้งค่าลิงก์ชีตแบบเด่นชัด -->
-                    <button onclick="openSheetsModal()" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-goldChampagne-400 hover:bg-goldChampagne-500 text-navy-900 shadow-lg border border-goldChampagne-200 animate-pulse">
-                        <i data-lucide="settings" class="w-4 h-4"></i>
-                        <span>⚙️ ตั้งค่าลิงก์ชีต</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
-        <!-- TAB 1: EXECUTIVE DASHBOARD VIEW -->
-        <section id="view-dashboard" class="space-y-6">
-            <!-- Filter Bar -->
-            <div class="bg-white/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-luxury border border-roseLuxury-200/70 no-print space-y-3.5">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-roseLuxury-100">
-                    <div class="flex items-center gap-2 text-roseLuxury-800 font-semibold text-sm">
-                        <div class="w-8 h-8 rounded-lg bg-roseLuxury-100 flex items-center justify-center text-roseLuxury-700">
-                            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
-                        </div>
-                        <span>ตัวกรองข้อมูลนำเสนอ:</span>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-1.5">
-                        <button onclick="setDatePreset('ALL')" id="preset-ALL" class="date-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-roseLuxury-700 text-white shadow-sm transition">ทั้งหมด</button>
-                        <button onclick="setDatePreset('TODAY')" id="preset-TODAY" class="date-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-roseLuxury-50 text-roseLuxury-800 hover:bg-roseLuxury-100 border border-roseLuxury-200 transition">วันนี้</button>
-                        <button onclick="setDatePreset('THIS_MONTH')" id="preset-THIS_MONTH" class="date-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-roseLuxury-50 text-roseLuxury-800 hover:bg-roseLuxury-100 border border-roseLuxury-200 transition">เดือนนี้</button>
-                        <button onclick="fetchSheetData()" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1 transition shadow-sm" title="ดึงข้อมูลล่าสุดจาก Google Sheets">
-                            <i data-lucide="refresh-cw" class="w-3 h-3"></i>
-                            <span>รีเฟรชข้อมูล</span>
-                        </button>
-                        <button onclick="window.print()" class="px-3 py-1 rounded-lg bg-roseLuxury-700 hover:bg-roseLuxury-800 text-white text-xs font-semibold flex items-center gap-1 transition shadow-sm">
-                            <i data-lucide="printer" class="w-3 h-3"></i>
-                            <span>PDF</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-medium text-gray-500 mb-1">ปี</label>
-                        <select id="filterYear" onchange="applyFilters()" class="w-full rounded-xl border border-roseLuxury-200 bg-roseLuxury-50/50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-roseLuxury-500">
-                            <option value="ALL">ทุกปี</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-gray-500 mb-1">เดือน</label>
-                        <select id="filterMonth" onchange="applyFilters()" class="w-full rounded-xl border border-roseLuxury-200 bg-roseLuxury-50/50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-roseLuxury-500">
-                            <option value="ALL">ทุกเดือน</option>
-                            <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option><option value="03">มีนาคม</option><option value="04">เมษายน</option>
-                            <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option><option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
-                            <option value="09">กันยายน</option><option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-gray-500 mb-1">แผนก</label>
-                        <select id="filterDept" onchange="applyFilters()" class="w-full rounded-xl border border-roseLuxury-200 bg-roseLuxury-50/50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-roseLuxury-500">
-                            <option value="ALL">ทุกแผนก</option>
-                            <option value="พิมพ์สี">พิมพ์สี</option><option value="อาบมันรีดเงา">อาบมันรีดเงา</option><option value="ปั๊ม">ปั๊ม</option><option value="ทั่วไป/แกะ">ทั่วไป/แกะ</option><option value="ขึ้นรูปกล่อง">ขึ้นรูปกล่อง</option><option value="คลังสินค้า">คลังสินค้า</option><option value="การจัดส่ง">การจัดส่ง</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-gray-500 mb-1">กะการทำงาน</label>
-                        <select id="filterShift" onchange="applyFilters()" class="w-full rounded-xl border border-roseLuxury-200 bg-roseLuxury-50/50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-roseLuxury-500">
-                            <option value="ALL">ทุกกะ</option>
-                            <option value="กะ A">กะ A</option><option value="กะ B">กะ B</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-gray-500 mb-1">สถานะ</label>
-                        <select id="filterStatus" onchange="applyFilters()" class="w-full rounded-xl border border-roseLuxury-200 bg-roseLuxury-50/50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-roseLuxury-500">
-                            <option value="ALL">ทุกสถานะ</option>
-                            <option value="รอดำเนินการ">รอดำเนินการ</option><option value="กำลังแก้ไข/คัดแยก">กำลังแก้ไข/คัดแยก</option><option value="แก้ไขแล้ว/ปิดงาน">แก้ไขแล้ว/ปิดงาน</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- KPI Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="gold-border-gradient rounded-2xl p-5 shadow-luxury relative overflow-hidden">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-roseLuxury-600">จำนวนเคสแจ้งปัญหา</p>
-                            <h3 id="kpiTotalCases" class="text-3xl font-bold text-gray-900 mt-1">0</h3>
-                        </div>
-                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-roseLuxury-500 to-roseLuxury-700 text-white flex items-center justify-center shadow-md">
-                            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-roseLuxury-100 flex items-center justify-between text-xs">
-                        <span class="px-2 py-0.5 rounded-md bg-roseLuxury-100 text-roseLuxury-800 font-medium">กะ A: <strong id="kpiShiftA">0</strong></span>
-                        <span class="px-2 py-0.5 rounded-md bg-goldChampagne-100 text-goldChampagne-700 font-medium">กะ B: <strong id="kpiShiftB">0</strong></span>
-                    </div>
-                </div>
-
-                <div class="gold-border-gradient rounded-2xl p-5 shadow-luxury relative overflow-hidden">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-goldChampagne-600">ของเสีย (แผ่น)</p>
-                            <div class="flex items-baseline gap-1.5 mt-1">
-                                <h3 id="kpiTotalSheets" class="text-3xl font-bold text-gray-900">0</h3>
-                                <span class="text-sm font-medium text-gray-500">แผ่น</span>
-                            </div>
-                        </div>
-                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-goldChampagne-400 to-goldChampagne-600 text-white flex items-center justify-center shadow-md">
-                            <i data-lucide="layers" class="w-5 h-5"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-goldChampagne-100 text-xs text-gray-600">งานพิมพ์/อาบมัน/ปั๊ม</div>
-                </div>
-
-                <div class="gold-border-gradient rounded-2xl p-5 shadow-luxury relative overflow-hidden">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-roseLuxury-700">ของเสีย (ชิ้น)</p>
-                            <div class="flex items-baseline gap-1.5 mt-1">
-                                <h3 id="kpiTotalPieces" class="text-3xl font-bold text-gray-900">0</h3>
-                                <span class="text-sm font-medium text-gray-500">ชิ้น</span>
-                            </div>
-                        </div>
-                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-pink-500 to-amber-500 text-white flex items-center justify-center shadow-md">
-                            <i data-lucide="box" class="w-5 h-5"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-roseLuxury-100 text-xs text-gray-600">งานแกะ/ขึ้นรูป/คลัง/จัดส่ง</div>
-                </div>
-
-                <div class="gold-border-gradient rounded-2xl p-5 shadow-luxury relative overflow-hidden">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">อัตราการแก้ไข/ปิดงาน</p>
-                            <h3 id="kpiResolveRate" class="text-3xl font-bold text-gray-900 mt-1">0%</h3>
-                        </div>
-                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-roseLuxury-600 to-amber-500 text-white flex items-center justify-center shadow-md">
-                            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-roseLuxury-100 flex items-center justify-between text-xs">
-                        <span class="text-emerald-700 font-medium">ปิดแล้ว: <strong id="kpiClosedCount">0</strong></span>
-                        <span class="text-rose-600 font-medium">รอ: <strong id="kpiPendingCount">0</strong></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white rounded-2xl p-5 shadow-luxury border border-roseLuxury-200/80">
-                    <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <i data-lucide="cpu" class="w-5 h-5 text-roseLuxury-600"></i>
-                        <span>เครื่องจักรที่พบปัญหาสูงสุด</span>
-                    </h3>
-                    <div class="relative h-72 w-full"><canvas id="chartMachines"></canvas></div>
-                </div>
-                <div class="bg-white rounded-2xl p-5 shadow-luxury border border-roseLuxury-200/80">
-                    <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <i data-lucide="alert-octagon" class="w-5 h-5 text-goldChampagne-600"></i>
-                        <span>ประเภทปัญหาที่พบมากที่สุด</span>
-                    </h3>
-                    <div class="relative h-72 w-full"><canvas id="chartDefects"></canvas></div>
-                </div>
-                <div class="bg-white rounded-2xl p-5 shadow-luxury border border-roseLuxury-200/80">
-                    <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <i data-lucide="user-cog" class="w-5 h-5 text-roseLuxury-600"></i>
-                        <span>ผู้ที่ผลิตงาน</span>
-                    </h3>
-                    <div class="relative h-72 w-full"><canvas id="chartOperators"></canvas></div>
-                </div>
-                <div class="bg-white rounded-2xl p-5 shadow-luxury border border-roseLuxury-200/80">
-                    <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <i data-lucide="user-check" class="w-5 h-5 text-goldChampagne-600"></i>
-                        <span>ผู้แจ้งข้อมูล (QC)</span>
-                    </h3>
-                    <div class="relative h-72 w-full"><canvas id="chartReporters"></canvas></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB 2: REPORT NEW DEFECT FORM VIEW -->
-        <section id="view-form" class="hidden max-w-4xl mx-auto">
-            <div class="bg-white rounded-3xl shadow-luxury border border-roseLuxury-200 overflow-hidden">
-                <div class="header-gradient px-6 py-5 text-white flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-white/15 border border-goldChampagne-300/50 flex items-center justify-center">
-                            <i data-lucide="file-plus-2" class="w-5 h-5 text-goldChampagne-300"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-lg sm:text-xl font-bold">บันทึกข้อมูลการแจ้งปัญหาการผลิต (Live Submit)</h2>
-                            <p class="text-xs text-roseLuxury-100">ข้อมูลจะถูกส่งเข้า Google Sheets และอัปเดตหน้าเว็บทันที</p>
-                        </div>
-                    </div>
-                    <button onclick="switchTab('dashboard')" class="text-xs bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg border border-white/20 transition">กลับหน้าสรุป</button>
-                </div>
-
-                <form id="defectForm" onsubmit="handleFormSubmit(event)" class="p-6 sm:p-8 space-y-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">วันที่พบปัญหา *</label>
-                            <input type="date" id="inpDate" required class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm bg-roseLuxury-50/30">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">กะการทำงาน *</label>
-                            <div class="grid grid-cols-2 gap-2">
-                                <label class="cursor-pointer"><input type="radio" name="inpShift" value="กะ A" checked class="peer sr-only"><div class="text-center py-2.5 rounded-xl border border-roseLuxury-200 text-sm font-semibold text-gray-600 peer-checked:bg-roseLuxury-700 peer-checked:text-white transition">กะ A</div></label>
-                                <label class="cursor-pointer"><input type="radio" name="inpShift" value="กะ B" class="peer sr-only"><div class="text-center py-2.5 rounded-xl border border-roseLuxury-200 text-sm font-semibold text-gray-600 peer-checked:bg-goldChampagne-600 peer-checked:text-white transition">กะ B</div></label>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">แผนกที่พบปัญหา *</label>
-                            <select id="inpDept" required class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm bg-roseLuxury-50/30">
-                                <option value="">-- เลือกแผนก --</option>
-                                <option value="พิมพ์สี">พิมพ์สี</option><option value="อาบมันรีดเงา">อาบมันรีดเงา</option><option value="ปั๊ม">ปั๊ม</option><option value="ทั่วไป/แกะ">ทั่วไป/แกะ</option><option value="ขึ้นรูปกล่อง">ขึ้นรูปกล่อง</option><option value="คลังสินค้า">คลังสินค้า</option><option value="การจัดส่ง">การจัดส่ง</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">เครื่องจักร / จุดงาน *</label>
-                            <select id="inpMachine" required class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm bg-roseLuxury-50/30">
-                                <option value="">-- เลือกเครื่องจักร --</option>
-                                <option value="2101">2101</option><option value="2104">2104</option><option value="3131">3131</option><option value="4102">4102</option><option value="6103">6103</option><option value="คลังกระดาษ">คลังกระดาษ</option><option value="ทั่วไป">ทั่วไป</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">เลขที่ใบสั่งผลิต / Job No. *</label>
-                            <input type="text" id="inpJobNo" required placeholder="เช่น JOB-2611-101" class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">ลูกค้า / ชื่องาน *</label>
-                            <input type="text" id="inpCustomerJob" required placeholder="เช่น บ.ออร่าสกิน - กล่องครีม" class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">ปัญหาที่พบ *</label>
-                            <input type="text" id="inpDefect" required placeholder="เช่น สีไม่ได้มาตรฐาน, กาวล่อน, ปั๊มไม่ขาด" class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm bg-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">จำนวนของเสีย *</label>
-                            <div class="flex rounded-xl overflow-hidden border border-roseLuxury-200">
-                                <input type="number" id="inpQty" min="1" required placeholder="เช่น 250" class="w-full px-3.5 py-2.5 text-sm focus:outline-none">
-                                <select id="inpUnit" class="bg-goldChampagne-50 border-l border-roseLuxury-200 px-4 py-2.5 text-sm font-bold text-roseLuxury-800"><option value="แผ่น">แผ่น</option><option value="ชิ้น">ชิ้น</option></select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">สถานะ *</label>
-                            <select id="inpStatus" required class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm bg-roseLuxury-50/30">
-                                <option value="รอดำเนินการ">รอดำเนินการ</option><option value="กำลังแก้ไข/คัดแยก">กำลังแก้ไข/คัดแยก</option><option value="แก้ไขแล้ว/ปิดงาน">แก้ไขแล้ว/ปิดงาน</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">ผู้ที่ผลิตงาน *</label>
-                            <input type="text" id="inpOperator" required placeholder="ชื่อช่างประจำเครื่อง" class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">ผู้แจ้งข้อมูล (QC) *</label>
-                            <input type="text" id="inpReporter" required placeholder="ชื่อพนักงาน QA" class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">สาเหตุและการแก้ไข</label>
-                            <textarea id="inpCauseAction" rows="2" placeholder="ระบุสาเหตุและแนวทางแก้ไข..." class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="pt-4 border-t border-roseLuxury-100 flex justify-end gap-3">
-                        <button type="submit" id="submitBtn" class="btn-gold-rose text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            <span>บันทึกส่งข้อมูลเรียลไทม์</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </section>
-
-        <!-- TAB 3: FULL LOGS -->
-        <section id="view-logs" class="hidden space-y-5">
-            <div class="bg-white rounded-2xl p-5 shadow-luxury border border-roseLuxury-200 flex justify-between items-center">
-                <div>
-                    <h2 class="text-lg font-bold text-gray-900">ฐานข้อมูลประวัติทั้งหมด</h2>
-                    <p class="text-xs text-gray-500">ข้อมูลเชื่อมต่อตรงจาก Google Sheets แบบเรียลไทม์</p>
-                </div>
-                <button onclick="fetchSheetData()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow transition">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> โหลดข้อมูลใหม่
-                </button>
-            </div>
-            <div class="bg-white rounded-2xl shadow-luxury border border-roseLuxury-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-roseLuxury-900 text-white text-xs font-semibold uppercase tracking-wider">
-                                <th class="py-3.5 px-4">วันที่ / กะ</th><th class="py-3.5 px-4">แผนก / เครื่อง</th><th class="py-3.5 px-4">Job No. / ชื่องาน</th><th class="py-3.5 px-4">ปัญหา</th><th class="py-3.5 px-4 text-right">จำนวน</th><th class="py-3.5 px-4">ผู้ผลิต</th><th class="py-3.5 px-4">ผู้แจ้ง</th><th class="py-3.5 px-4">สถานะ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="fullLogsBody" class="divide-y divide-roseLuxury-100 text-sm"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-    </main>
-
+<!-- ... existing code ... -->
     <!-- Google Sheets Setup Modal -->
     <div id="sheetsModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-roseLuxury-200 overflow-hidden">
@@ -436,15 +30,74 @@
         let records = [];
         let charts = {};
 
+        // รายการเครื่องจักรและจุดงานทั้งหมดตามที่ระบุ
+        const departmentMachines = {
+            "พิมพ์สี": ["2101", "2103", "2104", "2105", "2106", "2107"],
+            "อาบมันรีดเงา": ["3131", "3132", "3165", "3166", "3161"],
+            "ปั๊ม": ["4101", "4102", "4103", "4104", "4105", "4106", "4107", "4108"],
+            "ทั่วไป/แกะ": ["แกะ", "ทั่วไป", "5104", "5105"],
+            "ขึ้นรูปกล่อง": ["6101", "6103", "6104", "6106", "6107", "6108", "6109", "6110"],
+            "คลังสินค้า": ["คลังกระดาษ"],
+            "การจัดส่ง": ["คลังกระดาษ", "ทั่วไป"]
+        };
+
+        // รายการปัญหาทั้งหมดตามที่ระบุ
+        const allDefectOptions = [
+            "สีไม่ได้มาตรฐาน", "พิมพ์ไม่ตรง", "จุดขาว", "ขี้หมึก", "ขี้กระดาษ", "สีไม่สม่ำเสมอ", "รอยขูดขีด", "สีเลอะ", "น้ำมันกระเด็น", 
+            "โค๊ทไม่เงา", "โค๊ทไม่คลุมสี", "ความเงาไม่ได้มาตรฐาน", "ผ้ายางบุบ", "รอยขูดขีดจากการดึงดูสี", "คราบความร้อน (รีดเงา)", "เว้นโค๊ทไม่ตรงตำแหน่ง",
+            "ไม่ทำตามระบบ", "อาบน้ำยาUVไม่ได้มาตรฐาน", "Silk screenไม่ได้มาตรฐาน", "UVไม่ตรงตำแหน่ง", "Silk Screen ไม่ตรงตำแหน่ง", "UVเป็นรอย", "Silk screen เป็นรอย",
+            "ปั๊มไม่ขาด", "ปั๊มไม่ตรง", "เส้นพับไม่ได้มาตรฐาน", "เส้นพับแตก,ร้าว", "ปั๊มนูนไม่ตรง", "ปั๊มนูนแตก,ร้าว", "ปั๊มเคไม่ได้มาตรฐาน", "ปั๊มเคไม่ตรง", "ปั๊มเคไม่ตรงตำแหน่ง", "ปั๊มนูนไม่ตรงตำแหน่ง",
+            "คัด 100 %ไม่มีประสิทธิภาพ", "กล่องเป็นรอยจากพิมพ์", "กล่องเป็นรอย", "กล่องขาด", "กล่องเอียง", "กล่องเกย", "กาวล่อน", "ก้นกล่องไม่มีกาว", "กาวไม่ตรงตำแหน่ง", "กาวเอียง", "ติดกล่องเอียง", "กล่องห่าง", "กาวเลอะ", "งานโค่น", "ลังไม่ได้มาตรฐาน"
+        ];
+
+        function updateMachineOptions() {
+            const dept = document.getElementById('inpDept').value;
+            const machineSelect = document.getElementById('inpMachine');
+            machineSelect.innerHTML = '<option value="">-- เลือกเครื่องจักร --</option>';
+            
+            if (dept && departmentMachines[dept]) {
+                departmentMachines[dept].forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    machineSelect.appendChild(opt);
+                });
+            } else {
+                // ถ้ายังไม่เลือกแผนก ให้ดึงเครื่องจักรทั้งหมดมาแสดง
+                const allMachines = ["2101", "2103", "2104", "2105", "2106", "2107", "3131", "3132", "3165", "3166", "3161", "5104", "5105", "4101", "4102", "4103", "4104", "4105", "4106", "4107", "4108", "6101", "6103", "6104", "6106", "6107", "6108", "6109", "6110", "คลังกระดาษ", "แกะ", "ทั่วไป"];
+                allMachines.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    machineSelect.appendChild(opt);
+                });
+            }
+        }
+
+        // ฟังก์ชันเติมตัวเลือกปัญหาลงใน datalist เพื่อให้ผู้ใช้เลือกหรือพิมพ์ค้นหาได้ง่าย
+        function initDefectDatalist() {
+            const inputDefect = document.getElementById('inpDefect');
+            if (!inputDefect) return;
+            
+            let datalist = document.getElementById('defectListOptions');
+            if (!datalist) {
+                datalist = document.createElement('datalist');
+                datalist.id = 'defectListOptions';
+                document.body.appendChild(datalist);
+                inputDefect.setAttribute('list', 'defectListOptions');
+            }
+            datalist.innerHTML = allDefectOptions.map(d => `<option value="${d}">`).join('');
+        }
+
         const MOCK_INITIAL_DATA = [
-            { id: 'NC-1001', date: '2026-11-01', shift: 'กะ A', dept: 'พิมพ์สี', machine: '2101', jobNo: 'JOB-2611-01', customerJob: 'บ.ออร่าสกิน - กล่องครีมพรีเมียม', defect: 'สีเพี้ยน/ส้มมากเกินไป', qty: 350, unit: 'แผ่น', operator: 'สมชาย ใจดี', reporter: 'วิภาดา QC', causeAction: 'ปรับสมดุลหมึกพิมพ์ CMYK', status: 'แก้ไขแล้ว/ปิดงาน' },
-            { id: 'NC-1002', date: '2026-11-05', shift: 'กะ B', dept: 'อาบมันรีดเงา', machine: '3131', jobNo: 'JOB-2611-04', customerJob: 'บ.เนเชอรัล - กล่องสบู่สมุนไพร', defect: 'ฟิล์มย่น/ฟองอากาศ', qty: 180, unit: 'แผ่น', operator: 'ประเสริฐ เก่งมาก', reporter: 'กนกวรรณ QC', causeAction: 'เพิ่มความร้อนลูกกลิ้งเคลือบ', status: 'กำลังแก้ไข/คัดแยก' },
-            { id: 'NC-1003', date: '2026-11-10', shift: 'กะ A', dept: 'ปั๊ม', machine: '4102', jobNo: 'JOB-2611-08', customerJob: 'บ.ฟูดส์ - กล่องขนมเค้ก', defect: 'ไดคัทไม่ขาด/ทะลุ', qty: 520, unit: 'แผ่น', operator: 'อนันต์ ช่างปั๊ม', reporter: 'วิภาดา QC', causeAction: 'รองบล็อกปั๊มใหม่', status: 'รอดำเนินการ' },
-            { id: 'NC-1004', date: '2026-11-12', shift: 'กะ B', dept: 'ขึ้นรูปกล่อง', machine: 'ทั่วไป', jobNo: 'JOB-2611-12', customerJob: 'บ.คอสเมติก - กล่องเซรั่ม', defect: 'กาวไม่ติด/ขอบอ้า', qty: 240, unit: 'ชิ้น', operator: 'มานิตา แพ็คเกจ', reporter: 'กนกวรรณ QC', causeAction: 'เปลี่ยนเกรดกาวร้อน', status: 'แก้ไขแล้ว/ปิดงาน' }
+            { id: 'NC-1001', date: '2026-11-01', shift: 'กะ A', dept: 'พิมพ์สี', machine: '2101', jobNo: 'JOB-2611-01', customerJob: 'บ.ออร่าสกิน - กล่องครีมพรีเมียม', defect: 'สีไม่ได้มาตรฐาน', qty: 350, unit: 'แผ่น', operator: 'สมชาย ใจดี', reporter: 'วิภาดา QC', causeAction: 'ปรับสมดุลหมึกพิมพ์ CMYK', status: 'แก้ไขแล้ว/ปิดงาน' },
+            { id: 'NC-1002', date: '2026-11-05', shift: 'กะ B', dept: 'อาบมันรีดเงา', machine: '3131', jobNo: 'JOB-2611-04', customerJob: 'บ.เนเชอรัล - กล่องสบู่สมุนไพร', defect: 'โค๊ทไม่เงา', qty: 180, unit: 'แผ่น', operator: 'ประเสริฐ เก่งมาก', reporter: 'กนกวรรณ QC', causeAction: 'เพิ่มความร้อนลูกกลิ้งเคลือบ', status: 'กำลังแก้ไข/คัดแยก' }
         ];
 
         window.onload = function() {
             document.getElementById('inpDate').valueAsDate = new Date();
+            initDefectDatalist();
+            updateMachineOptions();
             if (SHEET_WEB_APP_URL) {
                 document.getElementById('scriptUrlInput').value = SHEET_WEB_APP_URL;
                 fetchSheetData();
@@ -457,285 +110,10 @@
         };
 
         function openSheetsModal() { document.getElementById('sheetsModal').classList.remove('hidden'); }
-        function closeSheetsModal() { document.getElementById('sheetsModal').classList.add('hidden'); }
-        
-        function saveScriptUrl() {
-            const url = document.getElementById('scriptUrlInput').value.trim();
-            if (!url) { alert('กรุณากรอกลิงก์ Web App URL'); return; }
-            
-            if (!url.includes('script.google.com') || !url.endsWith('/exec')) {
-                alert('⚠️ รูปแบบลิงก์ไม่ถูกต้อง!\n\nลิงก์ Web App ของ Google Sheets ต้องขึ้นต้นด้วย https://script.google.com/... และต้องลงท้ายด้วย /exec เท่านั้น');
-                return;
-            }
-
-            SHEET_WEB_APP_URL = url;
-            localStorage.setItem('kim_pai_sheet_url', url);
-            closeSheetsModal();
-            showToast('บันทึกและเชื่อมต่อ Google Sheets สำเร็จ!', 'success');
-            fetchSheetData();
-        }
-
-        // ดึงข้อมูลแบบเรียลไทม์พร้อมระบบดักจับ Error เชิงลึก
-        function fetchSheetData() {
-            if (!SHEET_WEB_APP_URL) return;
-            showToast('กำลังเชื่อมต่อ Google Sheets...', 'info');
-
-            fetch(SHEET_WEB_APP_URL, {
-                method: 'GET',
-                redirect: 'follow'
-            })
-            .then(res => {
-                if (!res.ok) throw new Error(`HTTP Error status: ${res.status}`);
-                return res.text();
-            })
-            .then(text => {
-                try {
-                    const data = JSON.parse(text);
-                    if (Array.isArray(data)) {
-                        records = data.map((r, idx) => ({
-                            id: r.id || 'NC-' + (idx + 1),
-                            date: r.date ? r.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
-                            shift: r.shift || 'กะ A',
-                            dept: r.dept || 'พิมพ์สี',
-                            machine: r.machine || '2101',
-                            jobNo: r.jobNo || '-',
-                            customerJob: r.customerJob || '-',
-                            defect: r.defect || '-',
-                            qty: Number(r.qty) || 0,
-                            unit: r.unit || 'แผ่น',
-                            operator: r.operator || '-',
-                            reporter: r.reporter || '-',
-                            causeAction: r.causeAction || '-',
-                            status: r.status || 'รอดำเนินการ'
-                        }));
-                        refreshAllViews();
-                        showToast('ซิงค์ข้อมูล Google Sheets สำเร็จ!', 'success');
-                    } else {
-                        throw new Error("ข้อมูลที่ได้รับจากชีตไม่ใช่รูปแบบ Array");
-                    }
-                } catch (parseErr) {
-                    console.error("Raw response text:", text);
-                    alert("⚠️ เชื่อมต่อสำเร็จแต่ไม่สามารถแปลงข้อมูลได้!\n\nสาเหตุที่เป็นไปได้:\n1. ตอน Deploy คุณยังเลือกสิทธิ์ผู้มีสิทธิ์เข้าถึงเป็น 'เฉพาะฉัน' (ต้องเป็น 'ทุกคน / Anyone')\n2. ใน Google Sheets ยังไม่มีแถวหัวข้อคอลัมน์ DefectLogs\n\nรายละเอียด: " + text.slice(0, 150));
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("❌ เชื่อมต่อ Google Sheets ไม่สำเร็จ!\n\nกรุณาตรวจสอบ:\n1. ลิงก์ Web App ต้องลงท้ายด้วย /exec เท่านั้น\n2. ต้องกด Deploy ใหม่ (เลือก Anyone) ทุกครั้งที่มีการแก้ไขโค้ด Apps Script\n\nError: " + err.message);
-            });
-        }
-
-        // บันทึกข้อมูลส่งไป Google Sheets (POST)
-        function handleFormSubmit(e) {
-            e.preventDefault();
-
-            const shiftRadio = document.querySelector('input[name="inpShift"]:checked');
-            const newRecord = {
-                id: 'NC-' + Date.now().toString().slice(-5),
-                date: document.getElementById('inpDate').value,
-                shift: shiftRadio ? shiftRadio.value : 'กะ A',
-                dept: document.getElementById('inpDept').value,
-                machine: document.getElementById('inpMachine').value,
-                jobNo: document.getElementById('inpJobNo').value.trim(),
-                customerJob: document.getElementById('inpCustomerJob').value.trim(),
-                defect: document.getElementById('inpDefect').value.trim(),
-                qty: Number(document.getElementById('inpQty').value),
-                unit: document.getElementById('inpUnit').value,
-                operator: document.getElementById('inpOperator').value.trim(),
-                reporter: document.getElementById('inpReporter').value.trim(),
-                causeAction: document.getElementById('inpCauseAction').value.trim(),
-                status: document.getElementById('inpStatus').value
-            };
-
-            if (!SHEET_WEB_APP_URL) {
-                records.push(newRecord);
-                refreshAllViews();
-                document.getElementById('defectForm').reset();
-                document.getElementById('inpDate').valueAsDate = new Date();
-                showToast('บันทึกข้อมูลจำลองสำเร็จ (ยังไม่ได้เชื่อม Google Sheets)', 'success');
-                switchTab('dashboard');
-                return;
-            }
-
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = 'กำลังส่งข้อมูลไป Google Sheets...';
-
-            fetch(SHEET_WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify(newRecord)
-            })
-            .then(res => res.json())
-            .then(res => {
-                btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>บันทึกส่งข้อมูลเรียลไทม์</span>';
-                lucide.createIcons();
-                document.getElementById('defectForm').reset();
-                document.getElementById('inpDate').valueAsDate = new Date();
-                showToast('บันทึกข้อมูลเข้า Google Sheets สำเร็จ!', 'success');
-                switchTab('dashboard');
-                fetchSheetData();
-            })
-            .catch(err => {
-                btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>บันทึกส่งข้อมูลเรียลไทม์</span>';
-                records.push(newRecord);
-                refreshAllViews();
-                showToast('บันทึกข้อมูลลงระบบหน้าจอสำเร็จ', 'warning');
-                switchTab('dashboard');
-            });
-        }
-
-        function switchTab(tabName) {
-            ['dashboard', 'form', 'logs'].forEach(t => {
-                document.getElementById(`view-${t}`).classList.add('hidden');
-                const btn = document.getElementById(`tab-${t}`);
-                btn.classList.remove('bg-white', 'text-roseLuxury-800', 'shadow-md');
-                btn.classList.add('bg-white/15', 'text-white', 'border', 'border-white/20');
-            });
-            document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`tab-${tabName}`);
-            activeBtn.classList.remove('bg-white/15', 'text-white', 'border', 'border-white/20');
-            activeBtn.classList.add('bg-white', 'text-roseLuxury-800', 'shadow-md');
-            if (tabName === 'dashboard') applyFilters();
-            else if (tabName === 'logs') renderFullLogsTable();
-            lucide.createIcons();
-        }
-
-        function getFilteredRecords() {
-            const year = document.getElementById('filterYear').value;
-            const month = document.getElementById('filterMonth').value;
-            const dept = document.getElementById('filterDept').value;
-            const shift = document.getElementById('filterShift').value;
-            const status = document.getElementById('filterStatus').value;
-
-            return records.filter(r => {
-                const rDate = r.date || '';
-                return (year === 'ALL' || rDate.slice(0, 4) === year) &&
-                       (month === 'ALL' || rDate.slice(5, 7) === month) &&
-                       (dept === 'ALL' || r.dept === dept) &&
-                       (shift === 'ALL' || r.shift === shift) &&
-                       (status === 'ALL' || r.status === status);
-            });
-        }
-
-        function applyFilters() {
-            const filtered = getFilteredRecords();
-            document.getElementById('totalBadgeCount').textContent = records.length;
-            updateKPIs(filtered);
-            renderAllCharts(filtered);
-        }
-
-        function refreshAllViews() {
-            populateYearDropdown();
-            applyFilters();
-            renderFullLogsTable();
-        }
-
-        function populateYearDropdown() {
-            const yearSelect = document.getElementById('filterYear');
-            const currentVal = yearSelect.value || 'ALL';
-            const yearsSet = new Set([new Date().getFullYear().toString()]);
-            records.forEach(r => { if (r.date && r.date.length >= 4) yearsSet.add(r.date.slice(0, 4)); });
-            const sortedYears = [...yearsSet].sort((a, b) => b.localeCompare(a));
-            yearSelect.innerHTML = `<option value="ALL">ทุกปี</option>` + sortedYears.map(y => `<option value="${y}">พ.ศ. ${Number(y)+543} (${y})</option>`).join('');
-            yearSelect.value = currentVal;
-        }
-
-        function updateKPIs(filtered) {
-            const totalCases = filtered.length;
-            const shiftA = filtered.filter(r => r.shift === 'กะ A').length;
-            const shiftB = filtered.filter(r => r.shift === 'กะ B').length;
-            let totalSheets = 0, totalPieces = 0;
-            filtered.forEach(r => {
-                const q = Number(r.qty) || 0;
-                if (r.unit === 'แผ่น') totalSheets += q; else totalPieces += q;
-            });
-            const closedCount = filtered.filter(r => r.status === 'แก้ไขแล้ว/ปิดงาน').length;
-            const pendingCount = totalCases - closedCount;
-            const resolveRate = totalCases > 0 ? Math.round((closedCount / totalCases) * 100) : 0;
-
-            document.getElementById('kpiTotalCases').textContent = totalCases.toLocaleString();
-            document.getElementById('kpiShiftA').textContent = shiftA.toLocaleString();
-            document.getElementById('kpiShiftB').textContent = shiftB.toLocaleString();
-            document.getElementById('kpiTotalSheets').textContent = totalSheets.toLocaleString();
-            document.getElementById('kpiTotalPieces').textContent = totalPieces.toLocaleString();
-            document.getElementById('kpiResolveRate').textContent = `${resolveRate}%`;
-            document.getElementById('kpiClosedCount').textContent = closedCount.toLocaleString();
-            document.getElementById('kpiPendingCount').textContent = pendingCount.toLocaleString();
-        }
-
-        function renderAllCharts(filtered) {
-            renderBarChart('chartMachines', filtered, 'machine', 'เครื่องจักร');
-            renderBarChart('chartDefects', filtered, 'defect', 'ประเภทปัญหา');
-            renderBarChart('chartOperators', filtered, 'operator', 'ผู้ผลิตงาน');
-            renderBarChart('chartReporters', filtered, 'reporter', 'ผู้แจ้งข้อมูล');
-        }
-
-        function renderBarChart(canvasId, data, key, labelName) {
-            const map = {};
-            data.forEach(item => { const val = item[key] || 'ไม่ระบุ'; map[val] = (map[val] || 0) + 1; });
-            const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8);
-            const labels = sorted.map(x => x[0]);
-            const values = sorted.map(x => x[1]);
-
-            if (charts[canvasId]) charts[canvasId].destroy();
-            charts[canvasId] = new Chart(document.getElementById(canvasId).getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: labels.length ? labels : ['ไม่มีข้อมูล'],
-                    datasets: [{ label: labelName, data: values.length ? values : [0], backgroundColor: '#DB2777', borderRadius: 8 }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', color: '#331D2C', font: { weight: 'bold', size: 11 } } },
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } }
-                }
-            });
-        }
-
-        function renderFullLogsTable() {
-            const tbody = document.getElementById('fullLogsBody');
-            if (records.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="py-10 text-center text-gray-400">ยังไม่มีข้อมูลใน Google Sheets</td></tr>`;
-                return;
-            }
-            tbody.innerHTML = [...records].reverse().map(r => `
-                <tr class="hover:bg-roseLuxury-50/50 transition">
-                    <td class="py-3 px-4">${r.date} (${r.shift})</td>
-                    <td class="py-3 px-4 font-semibold text-roseLuxury-800">${r.dept} / ${r.machine}</td>
-                    <td class="py-3 px-4"><div class="font-bold text-xs text-goldChampagne-700">${r.jobNo}</div><div class="text-xs text-gray-600">${r.customerJob}</div></td>
-                    <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-roseLuxury-50 text-roseLuxury-800 border">${r.defect}</span></td>
-                    <td class="py-3 px-4 text-right font-bold">${Number(r.qty).toLocaleString()} ${r.unit}</td>
-                    <td class="py-3 px-4 text-xs">${r.operator}</td>
-                    <td class="py-3 px-4 text-xs">${r.reporter}</td>
-                    <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${r.status === 'แก้ไขแล้ว/ปิดงาน' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${r.status}</span></td>
-                </tr>
-            `).join('');
-        }
-
-        function setDatePreset(preset) {
-            const now = new Date();
-            const yyyy = now.getFullYear().toString();
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            if (preset === 'ALL') {
-                document.getElementById('filterYear').value = 'ALL';
-                document.getElementById('filterMonth').value = 'ALL';
-            } else if (preset === 'TODAY' || preset === 'THIS_MONTH') {
-                document.getElementById('filterYear').value = yyyy;
-                document.getElementById('filterMonth').value = mm;
-            }
-            applyFilters();
-        }
-
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            const bgClass = type === 'success' ? 'bg-roseLuxury-800 text-white' : (type === 'error' ? 'bg-rose-600 text-white' : 'bg-gray-900 text-white');
-            toast.className = `px-4 py-3 rounded-2xl shadow-xl text-xs sm:text-sm font-medium transition-all ${bgClass}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-    </script>
-</body>
-</html>
+<!-- ... existing code ... -->
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">ปัญหาที่พบ *</label>
+                            <input type="text" id="inpDefect" required placeholder="เลือกหรือพิมพ์ปัญหาที่พบ..." class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm bg-white">
+                        </div>
+                        <div>
+<!-- ... existing code ... -->
