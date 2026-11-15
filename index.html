@@ -480,7 +480,6 @@
             if (!SHEET_WEB_APP_URL) return;
             showToast('กำลังเชื่อมต่อ Google Sheets...', 'info');
 
-            // ใช้ mode: 'cors' และ redirect: 'follow' เพื่อรองรับสคริปต์ Google ที่มักจะทำการรีไดเรกต์ 302
             fetch(SHEET_WEB_APP_URL, {
                 method: 'GET',
                 redirect: 'follow'
@@ -495,7 +494,7 @@
                     if (Array.isArray(data)) {
                         records = data.map((r, idx) => ({
                             id: r.id || 'NC-' + (idx + 1),
-                            date: r.date || new Date().toISOString().slice(0, 10),
+                            date: r.date ? r.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
                             shift: r.shift || 'กะ A',
                             dept: r.dept || 'พิมพ์สี',
                             machine: r.machine || '2101',
@@ -547,7 +546,6 @@
                 status: document.getElementById('inpStatus').value
             };
 
-            // หากยังไม่ได้ตั้งค่าลิงก์ชีต ให้บันทึกลงหน้าเว็บชั่วคราว
             if (!SHEET_WEB_APP_URL) {
                 records.push(newRecord);
                 refreshAllViews();
@@ -580,10 +578,9 @@
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>บันทึกส่งข้อมูลเรียลไทม์</span>';
-                // ถ้าส่งผ่านเน็ตเวิร์กไม่ผ่าน ให้บันทึกลงจอชั่วคราวแทนเพื่อไม่ให้งานสะดุด
                 records.push(newRecord);
                 refreshAllViews();
-                showToast('บันทึกข้อมูลลงระบบหน้าจอสำเร็จ (Google Sheets มีปัญหาการตอบสนอง)', 'warning');
+                showToast('บันทึกข้อมูลลงระบบหน้าจอสำเร็จ', 'warning');
                 switchTab('dashboard');
             });
         }
