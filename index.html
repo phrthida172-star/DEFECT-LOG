@@ -1,119 +1,226 @@
-<!-- ... existing code ... -->
-    <!-- Google Sheets Setup Modal -->
-    <div id="sheetsModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-roseLuxury-200 overflow-hidden">
-            <div class="header-gradient px-6 py-4 text-white flex items-center justify-between">
-                <h3 class="font-bold text-base flex items-center gap-2">
-                    <i data-lucide="settings" class="w-5 h-5 text-goldChampagne-300"></i>
-                    <span>ตั้งค่าลิงก์เชื่อมต่อ Google Sheets Web App</span>
-                </h3>
-                <button onclick="closeSheetsModal()" class="text-white/80 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="p-6 space-y-4 text-sm text-gray-700">
-                <p>วางลิงก์ **Web App URL** จาก Google Apps Script ของคุณที่นี่ เพื่อเปิดใช้งานโหมดบันทึกและดึงข้อมูลแบบเรียลไทม์:</p>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Web App URL (https://script.google.com/.../exec):</label>
-                    <input type="text" id="scriptUrlInput" placeholder="วางลิงก์ Web App ที่นี่..." class="w-full px-3.5 py-2.5 rounded-xl border border-roseLuxury-300 text-sm focus:ring-2 focus:ring-roseLuxury-500 bg-roseLuxury-50/50">
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบติดตามปัญหาระหว่างผลิต | KIM PAI PRINTING & PACKAGING</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Montserrat:wght@400;500;600&family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js & DataLabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Prompt', 'Sarabun', 'sans-serif'] },
+                    colors: {
+                        roseLuxury: { 50: '#FDF8F9', 100: '#FCE7F3', 200: '#FBCFE8', 300: '#F9A8D4', 400: '#F472B6', 500: '#EC4899', 600: '#DB2777', 700: '#BE185D', 800: '#9D174D', 900: '#831843' },
+                        goldChampagne: { 50: '#FFFBEB', 100: '#FEF3C7', 200: '#FDE68A', 300: '#FCD34D', 400: '#FBBF24', 500: '#F59E0B', 600: '#D97706', 700: '#B45309' }
+                    },
+                    boxShadow: {
+                        'luxury': '0 10px 30px -5px rgba(190, 24, 93, 0.08), 0 4px 12px -2px rgba(217, 119, 6, 0.05)',
+                        'gold-glow': '0 4px 20px -2px rgba(245, 158, 11, 0.25)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FDF8F9;
+            background-image: radial-gradient(circle at 10% 10%, rgba(252, 231, 243, 0.7) 0%, transparent 40%),
+                              radial-gradient(circle at 90% 85%, rgba(254, 243, 199, 0.6) 0%, transparent 40%);
+            color: #331D2C;
+        }
+        .gold-border-gradient {
+            border: 1px solid transparent;
+            background: linear-gradient(#FFFFFF, #FFFFFF) padding-box,
+                        linear-gradient(135deg, #F9A8D4 0%, #F59E0B 50%, #BE185D 100%) border-box;
+        }
+        .header-gradient { background: linear-gradient(135deg, #831843 0%, #BE185D 55%, #B45309 100%); }
+        .btn-gold-rose {
+            background: linear-gradient(135deg, #BE185D 0%, #DB2777 60%, #D97706 100%);
+            transition: all 0.25s ease;
+        }
+        .btn-gold-rose:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -4px rgba(190, 24, 93, 0.35); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #FDF8F9; }
+        ::-webkit-scrollbar-thumb { background: #F472B6; border-radius: 9999px; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #FFFFFF !important; }
+            .shadow-luxury { box-shadow: none !important; border: 1px solid #E5E7EB !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-roseLuxury-200 selection:text-roseLuxury-900">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Top Luxury Header -->
+    <header class="header-gradient text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="px-4 py-2 rounded-2xl bg-gradient-to-br from-[#FBF4E4] via-[#F5E4BE] to-[#ECD39E] border border-[#D4AF37]/80 shadow-gold-glow shrink-0 flex items-center justify-center">
+                        <svg width="168" height="44" viewBox="0 0 210 54" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KIM PAI PRINTING & PACKAGING">
+                            <text x="105" y="31" text-anchor="middle" fill="#3B3E2B" style="font-family: 'Cinzel', serif; font-weight: 600; font-size: 32px; letter-spacing: 2.5px;">KIM PAI</text>
+                            <text x="105" y="47" text-anchor="middle" textLength="176" lengthAdjust="spacing" fill="#3B3E2B" style="font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 10.2px; letter-spacing: 1.4px;">PRINTING &amp; PACKAGING</text>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="syncModeBadge" class="px-2.5 py-0.5 text-[11px] font-semibold tracking-wider uppercase rounded-full bg-amber-500/25 text-amber-200 border border-amber-400/40">
+                                🟡 โหมดข้อมูลตัวอย่าง (รอเชื่อมต่อชีต)
+                            </span>
+                        </div>
+                        <h1 class="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-white mt-0.5">
+                            ระบบติดตามปัญหาระหว่างผลิต (Live Dashboard)
+                        </h1>
+                    </div>
                 </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button onclick="closeSheetsModal()" class="px-4 py-2 rounded-xl border text-gray-600 text-xs font-semibold">ยกเลิก</button>
-                    <button onclick="saveScriptUrl()" class="px-5 py-2 rounded-xl bg-goldChampagne-600 hover:bg-goldChampagne-700 text-white text-xs font-bold shadow">บันทึกและเชื่อมต่อ</button>
+
+                <div class="flex flex-wrap items-center gap-2 no-print">
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all bg-white text-roseLuxury-800 shadow-md">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-goldChampagne-600"></i>
+                        <span>สรุปข้อมูล</span>
+                    </button>
+                    <button onclick="switchTab('form')" id="tab-form" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all bg-white/15 text-white hover:bg-white/25 border border-white/20">
+                        <i data-lucide="plus-circle" class="w-4 h-4 text-goldChampagne-300"></i>
+                        <span>บันทึกแจ้งปัญหา</span>
+                    </button>
+                    <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all bg-white/15 text-white hover:bg-white/25 border border-white/20">
+                        <i data-lucide="table-2" class="w-4 h-4 text-goldChampagne-300"></i>
+                        <span>ประวัติทั้งหมด (<span id="totalBadgeCount">0</span>)</span>
+                    </button>
+                    <button onclick="openSheetsModal()" id="setupSheetsBtn" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-goldChampagne-400 hover:bg-goldChampagne-500 text-roseLuxury-900 shadow-lg border border-goldChampagne-200 animate-pulse">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span>ตั้งค่าลิงก์ชีต</span>
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
+    </header>
 
-    <script>
-        Chart.register(ChartDataLabels);
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        let SHEET_WEB_APP_URL = localStorage.getItem('kim_pai_sheet_url') || '';
-        let records = [];
-        let charts = {};
-
-        // รายการเครื่องจักรและจุดงานทั้งหมดตามที่ระบุ
-        const departmentMachines = {
-            "พิมพ์สี": ["2101", "2103", "2104", "2105", "2106", "2107"],
-            "อาบมันรีดเงา": ["3131", "3132", "3165", "3166", "3161"],
-            "ปั๊ม": ["4101", "4102", "4103", "4104", "4105", "4106", "4107", "4108"],
-            "ทั่วไป/แกะ": ["แกะ", "ทั่วไป", "5104", "5105"],
-            "ขึ้นรูปกล่อง": ["6101", "6103", "6104", "6106", "6107", "6108", "6109", "6110"],
-            "คลังสินค้า": ["คลังกระดาษ"],
-            "การจัดส่ง": ["คลังกระดาษ", "ทั่วไป"]
-        };
-
-        // รายการปัญหาทั้งหมดตามที่ระบุ
-        const allDefectOptions = [
-            "สีไม่ได้มาตรฐาน", "พิมพ์ไม่ตรง", "จุดขาว", "ขี้หมึก", "ขี้กระดาษ", "สีไม่สม่ำเสมอ", "รอยขูดขีด", "สีเลอะ", "น้ำมันกระเด็น", 
-            "โค๊ทไม่เงา", "โค๊ทไม่คลุมสี", "ความเงาไม่ได้มาตรฐาน", "ผ้ายางบุบ", "รอยขูดขีดจากการดึงดูสี", "คราบความร้อน (รีดเงา)", "เว้นโค๊ทไม่ตรงตำแหน่ง",
-            "ไม่ทำตามระบบ", "อาบน้ำยาUVไม่ได้มาตรฐาน", "Silk screenไม่ได้มาตรฐาน", "UVไม่ตรงตำแหน่ง", "Silk Screen ไม่ตรงตำแหน่ง", "UVเป็นรอย", "Silk screen เป็นรอย",
-            "ปั๊มไม่ขาด", "ปั๊มไม่ตรง", "เส้นพับไม่ได้มาตรฐาน", "เส้นพับแตก,ร้าว", "ปั๊มนูนไม่ตรง", "ปั๊มนูนแตก,ร้าว", "ปั๊มเคไม่ได้มาตรฐาน", "ปั๊มเคไม่ตรง", "ปั๊มเคไม่ตรงตำแหน่ง", "ปั๊มนูนไม่ตรงตำแหน่ง",
-            "คัด 100 %ไม่มีประสิทธิภาพ", "กล่องเป็นรอยจากพิมพ์", "กล่องเป็นรอย", "กล่องขาด", "กล่องเอียง", "กล่องเกย", "กาวล่อน", "ก้นกล่องไม่มีกาว", "กาวไม่ตรงตำแหน่ง", "กาวเอียง", "ติดกล่องเอียง", "กล่องห่าง", "กาวเลอะ", "งานโค่น", "ลังไม่ได้มาตรฐาน"
-        ];
-
-        function updateMachineOptions() {
-            const dept = document.getElementById('inpDept').value;
-            const machineSelect = document.getElementById('inpMachine');
-            machineSelect.innerHTML = '<option value="">-- เลือกเครื่องจักร --</option>';
-            
-            if (dept && departmentMachines[dept]) {
-                departmentMachines[dept].forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m;
-                    opt.textContent = m;
-                    machineSelect.appendChild(opt);
-                });
-            } else {
-                // ถ้ายังไม่เลือกแผนก ให้ดึงเครื่องจักรทั้งหมดมาแสดง
-                const allMachines = ["2101", "2103", "2104", "2105", "2106", "2107", "3131", "3132", "3165", "3166", "3161", "5104", "5105", "4101", "4102", "4103", "4104", "4105", "4106", "4107", "4108", "6101", "6103", "6104", "6106", "6107", "6108", "6109", "6110", "คลังกระดาษ", "แกะ", "ทั่วไป"];
-                allMachines.forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m;
-                    opt.textContent = m;
-                    machineSelect.appendChild(opt);
-                });
-            }
-        }
-
-        // ฟังก์ชันเติมตัวเลือกปัญหาลงใน datalist เพื่อให้ผู้ใช้เลือกหรือพิมพ์ค้นหาได้ง่าย
-        function initDefectDatalist() {
-            const inputDefect = document.getElementById('inpDefect');
-            if (!inputDefect) return;
-            
-            let datalist = document.getElementById('defectListOptions');
-            if (!datalist) {
-                datalist = document.createElement('datalist');
-                datalist.id = 'defectListOptions';
-                document.body.appendChild(datalist);
-                inputDefect.setAttribute('list', 'defectListOptions');
-            }
-            datalist.innerHTML = allDefectOptions.map(d => `<option value="${d}">`).join('');
-        }
-
-        const MOCK_INITIAL_DATA = [
-            { id: 'NC-1001', date: '2026-11-01', shift: 'กะ A', dept: 'พิมพ์สี', machine: '2101', jobNo: 'JOB-2611-01', customerJob: 'บ.ออร่าสกิน - กล่องครีมพรีเมียม', defect: 'สีไม่ได้มาตรฐาน', qty: 350, unit: 'แผ่น', operator: 'สมชาย ใจดี', reporter: 'วิภาดา QC', causeAction: 'ปรับสมดุลหมึกพิมพ์ CMYK', status: 'แก้ไขแล้ว/ปิดงาน' },
-            { id: 'NC-1002', date: '2026-11-05', shift: 'กะ B', dept: 'อาบมันรีดเงา', machine: '3131', jobNo: 'JOB-2611-04', customerJob: 'บ.เนเชอรัล - กล่องสบู่สมุนไพร', defect: 'โค๊ทไม่เงา', qty: 180, unit: 'แผ่น', operator: 'ประเสริฐ เก่งมาก', reporter: 'กนกวรรณ QC', causeAction: 'เพิ่มความร้อนลูกกลิ้งเคลือบ', status: 'กำลังแก้ไข/คัดแยก' }
-        ];
-
-        window.onload = function() {
-            document.getElementById('inpDate').valueAsDate = new Date();
-            initDefectDatalist();
-            updateMachineOptions();
-            if (SHEET_WEB_APP_URL) {
-                document.getElementById('scriptUrlInput').value = SHEET_WEB_APP_URL;
-                fetchSheetData();
-            } else {
-                records = MOCK_INITIAL_DATA;
-                refreshAllViews();
-                showToast('โหมดจำลองข้อมูล (Demo): สามารถกดตั้งค่าลิงก์ชีตเพื่อเชื่อมต่อจริงได้', 'info');
-            }
-            lucide.createIcons();
-        };
-
-        function openSheetsModal() { document.getElementById('sheetsModal').classList.remove('hidden'); }
-<!-- ... existing code ... -->
-                        <div class="sm:col-span-2">
-                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">ปัญหาที่พบ *</label>
-                            <input type="text" id="inpDefect" required placeholder="เลือกหรือพิมพ์ปัญหาที่พบ..." class="w-full rounded-xl border border-roseLuxury-200 px-3.5 py-2.5 text-sm bg-white">
+        <!-- TAB 1: EXECUTIVE DASHBOARD VIEW -->
+        <section id="view-dashboard" class="space-y-6">
+            <!-- Filter Bar -->
+            <div class="bg-white/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-luxury border border-roseLuxury-200/70 no-print space-y-3.5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-roseLuxury-100">
+                    <div class="flex items-center gap-2 text-roseLuxury-800 font-semibold text-sm">
+                        <div class="w-8 h-8 rounded-lg bg-roseLuxury-100 flex items-center justify-center text-roseLuxury-700">
+                            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
                         </div>
+                        <span>ตัวกรองข้อมูลนำเสนอ:</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button onclick="setDatePreset('ALL')" id="preset-ALL" class="date-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-roseLuxury-700 text-white shadow-sm transition">ทั้งหมด</button>
+                        <button onclick="setDatePreset('TODAY')" id="preset-TODAY" class="date-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-roseLuxury-50 text-roseLuxury-800 hover:bg-roseLuxury-100 border border-roseLuxury-200 transition">วันนี้</button>
+                        <button onclick="setDatePreset('THIS_MONTH')" id="preset-THIS_MONTH" class="date-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-roseLuxury-50 text-roseLuxury-800 hover:bg-roseLuxury-100 border border-roseLuxury-200 transition">เดือนนี้</button>
+                        <button onclick="fetchSheetData()" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1 transition shadow-sm" title="ดึงข้อมูลล่าสุดจาก Google Sheets">
+                            <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                            <span>รีเฟรชข้อมูล</span>
+                        </button>
+                        <button onclick="window.print()" class="px-3 py-1 rounded-lg bg-roseLuxury-700 hover:bg-roseLuxury-800 text-white text-xs font-semibold flex items-center gap-1 transition shadow-sm">
+                            <i data-lucide="printer" class="w-3 h-3"></i>
+                            <span>PDF</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-500 mb-1">ปี</label>
+                        <select id="filterYear" onchange="applyFilters()" class="w-full rounded-xl border border-roseLuxury-200 bg-roseLuxury-50/50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-roseLuxury-500">
+                            <option value="ALL">ทุกปี</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-500 mb-1">เดือน</label>
+                        <select id="filterMonth" onchange="applyFilters()" class="w-full rounded-xl border border-roseLuxury-200 bg-roseLuxury-50/50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-roseLuxury-500">
+                            <option value="ALL">ทุกเดือน</option>
+                            <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option><option value="03">มีนาคม</option><option value="04">เมษายน</option>
+                            <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option><option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
+                            <option value="09">กันยายน</option><option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-500 mb-1">แผนก</label>
+                        <select id="filterDept" onchange="applyFilters()" class="w-full rounded-xl border border-roseLuxury-200 bg-roseLuxury-50/50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-roseLuxury-500">
+                            <option value="ALL">ทุกแผนก</option>
+                            <option value="พิมพ์สี">พิมพ์สี</option><option value="อาบมันรีดเงา">อาบมันรีดเงา</option><option value="ปั๊ม">ปั๊ม</option><option value="ทั่วไป/แกะ">ทั่วไป/แกะ</option><option value="ขึ้นรูปกล่อง">ขึ้นรูปกล่อง</option><option value="คลังสินค้า">คลังสินค้า</option><option value="บริการลูกค้า">บริการลูกค้า</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-500 mb-1">กะการทำงาน</label>
+                        <select id="filterShift" onchange="applyFilters()" class="w-full rounded-xl border border-roseLuxury-200 bg-roseLuxury-50/50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-roseLuxury-500">
+                            <option value="ALL">ทุกกะ</option>
+                            <option value="กะ A">กะ A</option><option value="กะ B">กะ B</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-500 mb-1">สถานะ</label>
+                        <select id="filterStatus" onchange="applyFilters()" class="w-full rounded-xl border border-roseLuxury-200 bg-roseLuxury-50/50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-roseLuxury-500">
+                            <option value="ALL">ทุกสถานะ</option>
+                            <option value="รอดำเนินการ">รอดำเนินการ</option><option value="กำลังแก้ไข/คัดแยก">กำลังแก้ไข/คัดแยก</option><option value="แก้ไขแล้ว/ปิดงาน">แก้ไขแล้ว/ปิดงาน</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="gold-border-gradient rounded-2xl p-5 shadow-luxury relative overflow-hidden">
+                    <div class="flex justify-between items-start">
                         <div>
-<!-- ... existing code ... -->
+                            <p class="text-xs font-semibold uppercase tracking-wider text-roseLuxury-600">จำนวนเคสแจ้งปัญหา</p>
+                            <h3 id="kpiTotalCases" class="text-3xl font-bold text-gray-900 mt-1">0</h3>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-roseLuxury-500 to-roseLuxury-700 text-white flex items-center justify-center shadow-md">
+                            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-roseLuxury-100 flex items-center justify-between text-xs">
+                        <span class="px-2 py-0.5 rounded-md bg-roseLuxury-100 text-roseLuxury-800 font-medium">กะ A: <strong id="kpiShiftA">0</strong></span>
+                        <span class="px-2 py-0.5 rounded-md bg-goldChampagne-100 text-goldChampagne-700 font-medium">กะ B: <strong id="kpiShiftB">0</strong></span>
+                    </div>
+                </div>
+
+                <div class="gold-border-gradient rounded-2xl p-5 shadow-luxury relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-goldChampagne-600">ของเสียรวม (แผ่น)</p>
+                            <div class="flex items-baseline gap-1.5 mt-1">
+                                <h3 id="kpiTotalSheets" class="text-3xl font-bold text-gray-900">0</h3>
+                                <span class="text-sm font-medium text-gray-500">แผ่น</span>
+                            </div>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-goldChampagne-400 to-goldChampagne-600 text-white flex items-center justify-center shadow-md">
+                            <i data-lucide="layers" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-goldChampagne-100 text-xs text-gray-600">งานพิมพ์/อาบมัน/ปั๊ม</div>
+                </div>
+
+                <div class="gold-border-gradient rounded-2xl p-5 shadow-luxury relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-roseLuxury-700">ของเสียรวม (ชิ้น)</p>
+                            <div class="flex items-baseline gap-1.5 mt-1">
+                                <h3 id="kpiTotalPieces" class="text-3xl font-bold text-gray-900">0</h3>
+                                <span class="text-sm font-medium text-gray-500">ชิ้น</span>
+                            </div>
+                        </div>
+                        <div class="w
