@@ -436,6 +436,14 @@
         let records = [];
         let charts = {};
 
+        // ชุดข้อมูลตัวอย่างเริ่มต้น (กรณีเชื่อมต่อ Google Sheets ไม่สำเร็จหรือยังไม่ได้ตั้งค่า)
+        const MOCK_INITIAL_DATA = [
+            { id: 'NC-1001', date: '2026-11-01', shift: 'กะ A', dept: 'พิมพ์สี', machine: '2101', jobNo: 'JOB-2611-01', customerJob: 'บ.ออร่าสกิน - กล่องครีมพรีเมียม', defect: 'สีเพี้ยน/ส้มมากเกินไป', qty: 350, unit: 'แผ่น', operator: 'สมชาย ใจดี', reporter: 'วิภาดา QC', causeAction: 'ปรับสมดุลหมึกพิมพ์ CMYK', status: 'แก้ไขแล้ว/ปิดงาน' },
+            { id: 'NC-1002', date: '2026-11-05', shift: 'กะ B', dept: 'อาบมันรีดเงา', machine: '3131', jobNo: 'JOB-2611-04', customerJob: 'บ.เนเชอรัล - กล่องสบู่สมุนไพร', defect: 'ฟิล์มย่น/ฟองอากาศ', qty: 180, unit: 'แผ่น', operator: 'ประเสริฐ เก่งมาก', reporter: 'กนกวรรณ QC', causeAction: 'เพิ่มความร้อนลูกกลิ้งเคลือบ', status: 'กำลังแก้ไข/คัดแยก' },
+            { id: 'NC-1003', date: '2026-11-10', shift: 'กะ A', dept: 'ปั๊ม', machine: '4102', jobNo: 'JOB-2611-08', customerJob: 'บ.ฟودส์ - กล่องขนมเค้ก', defect: 'ไดคัทไม่ขาด/ทะลุ', qty: 520, unit: 'แผ่น', operator: 'อนันต์ ช่างปั๊ม', reporter: 'วิภาดา QC', causeAction: 'รองบล็อกปั๊มใหม่', status: 'รอดำเนินการ' },
+            { id: 'NC-1004', date: '2026-11-12', shift: 'กะ B', dept: 'ขึ้นรูปกล่อง', machine: 'ทั่วไป', jobNo: 'JOB-2611-12', customerJob: 'บ.คอสเมติก - กล่องเซรั่ม', defect: 'กาวไม่ติด/ขอบอ้า', qty: 240, unit: 'ชิ้น', operator: 'มานิตา แพ็คเกจ', reporter: 'กนกวรรณ QC', causeAction: 'เปลี่ยนเกรดกาวร้อน', status: 'แก้ไขแล้ว/ปิดงาน' }
+        ];
+
         const DEPT_COLORS = { 'พิมพ์สี': '#F43F5E', 'อาบมันรีดเงา': '#F59E0B', 'ปั๊ม': '#8B5CF6', 'ทั่วไป/แกะ': '#14B8A6', 'ขึ้นรูปกล่อง': '#10B981', 'คลังสินค้า': '#3B82F6', 'การจัดส่ง': '#F97316' };
 
         window.onload = function() {
@@ -444,17 +452,27 @@
                 document.getElementById('scriptUrlInput').value = SHEET_WEB_APP_URL;
                 fetchSheetData();
             } else {
-                showToast('กรุณากดปุ่ม "⚙️ ตั้งค่าลิงก์ชีต" มุมขวาบน เพื่อเชื่อมต่อ Google Sheets', 'info');
-                openSheetsModal();
+                // หากยังไม่มีลิงก์ ให้โหลดข้อมูลจำลองมาแสดงก่อนเพื่อให้แดชบอร์ดสมบูรณ์
+                records = MOCK_INITIAL_DATA;
+                refreshAllViews();
+                showToast('โหมดจำลองข้อมูล (Demo): สามารถกดตั้งค่าลิงก์ชีตเพื่อเชื่อมต่อจริงได้', 'info');
             }
             lucide.createIcons();
         };
 
         function openSheetsModal() { document.getElementById('sheetsModal').classList.remove('hidden'); }
         function closeSheetsModal() { document.getElementById('sheetsModal').classList.add('hidden'); }
+        
         function saveScriptUrl() {
             const url = document.getElementById('scriptUrlInput').value.trim();
             if (!url) { alert('กรุณากรอกลิงก์ Web App URL'); return; }
+            
+            // ตรวจสอบเบื้องต้นว่าลิงก์ต้องเป็น Google Script Web App
+            if (!url.includes('script.google.com') || !url.endsWith('/exec')) {
+                alert('⚠️ รูปแบบลิงก์ไม่ถูกต้อง!\n\nลิงก์ Web App ของ Google Sheets ต้องขึ้นต้นด้วย https://script.google.com/... และต้องลงท้ายด้วย /exec เท่านั้น\n(ห้ามใช้ลิงก์ที่ลงท้ายด้วย /edit)');
+                return;
+            }
+
             SHEET_WEB_APP_URL = url;
             localStorage.setItem('kim_pai_sheet_url', url);
             closeSheetsModal();
@@ -500,11 +518,6 @@
         // บันทึกข้อมูลส่งไป Google Sheets (POST)
         function handleFormSubmit(e) {
             e.preventDefault();
-            if (!SHEET_WEB_APP_URL) {
-                alert('กรุณาตั้งค่าลิงก์ Google Sheets Web App URL ก่อนบันทึกข้อมูล');
-                openSheetsModal();
-                return;
-            }
 
             const shiftRadio = document.querySelector('input[name="inpShift"]:checked');
             const newRecord = {
@@ -524,6 +537,17 @@
                 status: document.getElementById('inpStatus').value
             };
 
+            // หากยังไม่ได้ตั้งค่าลิงก์ชีต ให้บันทึกลงหน้าเว็บชั่วคราว
+            if (!SHEET_WEB_APP_URL) {
+                records.push(newRecord);
+                refreshAllViews();
+                document.getElementById('defectForm').reset();
+                document.getElementById('inpDate').valueAsDate = new Date();
+                showToast('บันทึกข้อมูลจำลองสำเร็จ (ยังไม่ได้เชื่อม Google Sheets)', 'success');
+                switchTab('dashboard');
+                return;
+            }
+
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = 'กำลังส่งข้อมูลไป Google Sheets...';
@@ -541,12 +565,16 @@
                 document.getElementById('inpDate').valueAsDate = new Date();
                 showToast('บันทึกข้อมูลเข้า Google Sheets สำเร็จ!', 'success');
                 switchTab('dashboard');
-                fetchSheetData(); // ดึงข้อมูลล่าสุดทันทีหลังบันทึก
+                fetchSheetData();
             })
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>บันทึกส่งข้อมูลเรียลไทม์</span>';
-                alert('เกิดข้อผิดพลาดในการบันทึก: ' + err);
+                // ถ้าส่งผ่านเน็ตเวิร์กไม่ผ่าน ให้บันทึกลงจอชั่วคราวแทนเพื่อไม่ให้งานสะดุด
+                records.push(newRecord);
+                refreshAllViews();
+                showToast('บันทึกข้อมูลลงระบบหน้าจอสำเร็จ (Google Sheets มีปัญหาการตอบสนอง)', 'warning');
+                switchTab('dashboard');
             });
         }
 
