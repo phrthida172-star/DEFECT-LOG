@@ -436,15 +436,12 @@
         let records = [];
         let charts = {};
 
-        // ชุดข้อมูลตัวอย่างเริ่มต้น (กรณีเชื่อมต่อ Google Sheets ไม่สำเร็จหรือยังไม่ได้ตั้งค่า)
         const MOCK_INITIAL_DATA = [
             { id: 'NC-1001', date: '2026-11-01', shift: 'กะ A', dept: 'พิมพ์สี', machine: '2101', jobNo: 'JOB-2611-01', customerJob: 'บ.ออร่าสกิน - กล่องครีมพรีเมียม', defect: 'สีเพี้ยน/ส้มมากเกินไป', qty: 350, unit: 'แผ่น', operator: 'สมชาย ใจดี', reporter: 'วิภาดา QC', causeAction: 'ปรับสมดุลหมึกพิมพ์ CMYK', status: 'แก้ไขแล้ว/ปิดงาน' },
             { id: 'NC-1002', date: '2026-11-05', shift: 'กะ B', dept: 'อาบมันรีดเงา', machine: '3131', jobNo: 'JOB-2611-04', customerJob: 'บ.เนเชอรัล - กล่องสบู่สมุนไพร', defect: 'ฟิล์มย่น/ฟองอากาศ', qty: 180, unit: 'แผ่น', operator: 'ประเสริฐ เก่งมาก', reporter: 'กนกวรรณ QC', causeAction: 'เพิ่มความร้อนลูกกลิ้งเคลือบ', status: 'กำลังแก้ไข/คัดแยก' },
-            { id: 'NC-1003', date: '2026-11-10', shift: 'กะ A', dept: 'ปั๊ม', machine: '4102', jobNo: 'JOB-2611-08', customerJob: 'บ.ฟودส์ - กล่องขนมเค้ก', defect: 'ไดคัทไม่ขาด/ทะลุ', qty: 520, unit: 'แผ่น', operator: 'อนันต์ ช่างปั๊ม', reporter: 'วิภาดา QC', causeAction: 'รองบล็อกปั๊มใหม่', status: 'รอดำเนินการ' },
+            { id: 'NC-1003', date: '2026-11-10', shift: 'กะ A', dept: 'ปั๊ม', machine: '4102', jobNo: 'JOB-2611-08', customerJob: 'บ.ฟูดส์ - กล่องขนมเค้ก', defect: 'ไดคัทไม่ขาด/ทะลุ', qty: 520, unit: 'แผ่น', operator: 'อนันต์ ช่างปั๊ม', reporter: 'วิภาดา QC', causeAction: 'รองบล็อกปั๊มใหม่', status: 'รอดำเนินการ' },
             { id: 'NC-1004', date: '2026-11-12', shift: 'กะ B', dept: 'ขึ้นรูปกล่อง', machine: 'ทั่วไป', jobNo: 'JOB-2611-12', customerJob: 'บ.คอสเมติก - กล่องเซรั่ม', defect: 'กาวไม่ติด/ขอบอ้า', qty: 240, unit: 'ชิ้น', operator: 'มานิตา แพ็คเกจ', reporter: 'กนกวรรณ QC', causeAction: 'เปลี่ยนเกรดกาวร้อน', status: 'แก้ไขแล้ว/ปิดงาน' }
         ];
-
-        const DEPT_COLORS = { 'พิมพ์สี': '#F43F5E', 'อาบมันรีดเงา': '#F59E0B', 'ปั๊ม': '#8B5CF6', 'ทั่วไป/แกะ': '#14B8A6', 'ขึ้นรูปกล่อง': '#10B981', 'คลังสินค้า': '#3B82F6', 'การจัดส่ง': '#F97316' };
 
         window.onload = function() {
             document.getElementById('inpDate').valueAsDate = new Date();
@@ -452,7 +449,6 @@
                 document.getElementById('scriptUrlInput').value = SHEET_WEB_APP_URL;
                 fetchSheetData();
             } else {
-                // หากยังไม่มีลิงก์ ให้โหลดข้อมูลจำลองมาแสดงก่อนเพื่อให้แดชบอร์ดสมบูรณ์
                 records = MOCK_INITIAL_DATA;
                 refreshAllViews();
                 showToast('โหมดจำลองข้อมูล (Demo): สามารถกดตั้งค่าลิงก์ชีตเพื่อเชื่อมต่อจริงได้', 'info');
@@ -467,9 +463,8 @@
             const url = document.getElementById('scriptUrlInput').value.trim();
             if (!url) { alert('กรุณากรอกลิงก์ Web App URL'); return; }
             
-            // ตรวจสอบเบื้องต้นว่าลิงก์ต้องเป็น Google Script Web App
             if (!url.includes('script.google.com') || !url.endsWith('/exec')) {
-                alert('⚠️ รูปแบบลิงก์ไม่ถูกต้อง!\n\nลิงก์ Web App ของ Google Sheets ต้องขึ้นต้นด้วย https://script.google.com/... และต้องลงท้ายด้วย /exec เท่านั้น\n(ห้ามใช้ลิงก์ที่ลงท้ายด้วย /edit)');
+                alert('⚠️ รูปแบบลิงก์ไม่ถูกต้อง!\n\nลิงก์ Web App ของ Google Sheets ต้องขึ้นต้นด้วย https://script.google.com/... และต้องลงท้ายด้วย /exec เท่านั้น');
                 return;
             }
 
@@ -480,14 +475,23 @@
             fetchSheetData();
         }
 
-        // ดึงข้อมูลแบบเรียลไทม์จาก Google Sheets (GET)
+        // ดึงข้อมูลแบบเรียลไทม์พร้อมระบบดักจับ Error เชิงลึก
         function fetchSheetData() {
             if (!SHEET_WEB_APP_URL) return;
-            showToast('กำลังดึงข้อมูลล่าสุดจาก Google Sheets...', 'info');
+            showToast('กำลังเชื่อมต่อ Google Sheets...', 'info');
 
-            fetch(SHEET_WEB_APP_URL)
-                .then(res => res.json())
-                .then(data => {
+            // ใช้ mode: 'cors' และ redirect: 'follow' เพื่อรองรับสคริปต์ Google ที่มักจะทำการรีไดเรกต์ 302
+            fetch(SHEET_WEB_APP_URL, {
+                method: 'GET',
+                redirect: 'follow'
+            })
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP Error status: ${res.status}`);
+                return res.text();
+            })
+            .then(text => {
+                try {
+                    const data = JSON.parse(text);
                     if (Array.isArray(data)) {
                         records = data.map((r, idx) => ({
                             id: r.id || 'NC-' + (idx + 1),
@@ -506,13 +510,19 @@
                             status: r.status || 'รอดำเนินการ'
                         }));
                         refreshAllViews();
-                        showToast('ซิงค์ข้อมูลเรียลไทม์สำเร็จ!', 'success');
+                        showToast('ซิงค์ข้อมูล Google Sheets สำเร็จ!', 'success');
+                    } else {
+                        throw new Error("ข้อมูลที่ได้รับจากชีตไม่ใช่รูปแบบ Array");
                     }
-                })
-                .catch(err => {
-                    console.error(err);
-                    showToast('เชื่อมต่อดึงข้อมูลไม่สำเร็จ ตรวจสอบลิงก์ Web App', 'error');
-                });
+                } catch (parseErr) {
+                    console.error("Raw response text:", text);
+                    alert("⚠️ เชื่อมต่อสำเร็จแต่ไม่สามารถแปลงข้อมูลได้!\n\nสาเหตุที่เป็นไปได้:\n1. ตอน Deploy คุณยังเลือกสิทธิ์ผู้มีสิทธิ์เข้าถึงเป็น 'เฉพาะฉัน' (ต้องเป็น 'ทุกคน / Anyone')\n2. ใน Google Sheets ยังไม่มีแถวหัวข้อคอลัมน์ DefectLogs\n\nรายละเอียด: " + text.slice(0, 150));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("❌ เชื่อมต่อ Google Sheets ไม่สำเร็จ!\n\nกรุณาตรวจสอบ:\n1. ลิงก์ Web App ต้องลงท้ายด้วย /exec เท่านั้น\n2. ต้องกด Deploy ใหม่ (เลือก Anyone) ทุกครั้งที่มีการแก้ไขโค้ด Apps Script\n\nError: " + err.message);
+            });
         }
 
         // บันทึกข้อมูลส่งไป Google Sheets (POST)
